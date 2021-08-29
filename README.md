@@ -7,6 +7,7 @@ transfrom single or multi struct value to (https://github.com/DATA-DOG/go-sqlmoc
 # example
 ```go
 import (
+    "context"
     "database/sql"
     "testing"
 
