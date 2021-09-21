@@ -69,7 +69,7 @@ func Test_ValueFromField(t *testing.T) {
 		CreateTime:  1630248918,
 	}
 	value := valuesFromModel(reflect.TypeOf(model), reflect.ValueOf(model))
-	assert.Equal(t, []driver.Value{uint64(10), "test", "1,2", uint32(1630248918)}, value)
+	assert.Equal(t, []driver.Value{uint64(10), "test", []byte("1,2"), uint32(1630248918)}, value)
 }
 
 func Test_SingleRow(t *testing.T) {
@@ -81,7 +81,7 @@ func Test_SingleRow(t *testing.T) {
 	}
 
 	targetRows := sqlmock.NewRows([]string{"id", "name", "custom_field", "create_time"}).
-		AddRow(uint64(12), "test_abc", "1,2", uint32(1630248920))
+		AddRow(uint64(12), "test_abc", []byte("1,2"), uint32(1630248920))
 
 	rows := ModelToRows(model)
 	assert.Equal(t, targetRows, rows)
@@ -106,8 +106,8 @@ func Test_MultiStructValueRows(t *testing.T) {
 	}
 
 	targetRows := sqlmock.NewRows([]string{"id", "name", "custom_field", "create_time"}).
-		AddRow(uint64(12), "test_abc", "1,2", uint32(1630248920)).
-		AddRow(uint64(13), "test_efg", "", uint32(1630248922))
+		AddRow(uint64(12), "test_abc", []byte("1,2"), uint32(1630248920)).
+		AddRow(uint64(13), "test_efg", []byte(""), uint32(1630248922))
 
 	rows := ModelToRows(model)
 	assert.Equal(t, targetRows, rows)
@@ -129,8 +129,8 @@ func Test_MultiStructPtrRows(t *testing.T) {
 	}
 
 	targetRows := sqlmock.NewRows([]string{"id", "name", "custom_field", "create_time"}).
-		AddRow(uint64(12), "test_abc", "", uint32(1630248920)).
-		AddRow(uint64(13), "test_efg", "", uint32(1630248922))
+		AddRow(uint64(12), "test_abc", []byte(""), uint32(1630248920)).
+		AddRow(uint64(13), "test_efg", []byte(""), uint32(1630248922))
 
 	rows := ModelToRows(model)
 	assert.Equal(t, targetRows, rows)

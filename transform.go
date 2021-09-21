@@ -56,7 +56,11 @@ func valuesFromModel(dstType reflect.Type, dstValue reflect.Value) []driver.Valu
 			switch cv := columnValue.(type) {
 			case driver.Valuer:
 				v, _ := cv.Value()
-				values = append(values, v)
+				if strV, ok := v.(string); ok {
+					values = append(values, []byte(strV))
+				} else {
+					values = append(values, v)
+				}
 			default:
 				values = append(values, columnValue)
 			}
