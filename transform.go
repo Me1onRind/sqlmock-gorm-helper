@@ -53,7 +53,13 @@ func valuesFromModel(dstType reflect.Type, dstValue reflect.Value) []driver.Valu
 		fieldValue := dstValue.Field(j)
 		columnValue := valueFromField(dstType.Field(j), fieldValue)
 		if columnValue != nil {
-			values = append(values, columnValue)
+			switch cv := columnValue.(type) {
+			case driver.Valuer:
+				v, _ := cv.Value()
+				values = append(values, v)
+			default:
+				values = append(values, columnValue)
+			}
 		}
 	}
 	return values
