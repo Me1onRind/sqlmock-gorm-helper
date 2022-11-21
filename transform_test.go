@@ -14,12 +14,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type BaseModel struct {
+	ID         uint64 `gorm:"column:id"`
+	CreateTime uint32 `gorm:"column:create_time"`
+}
+
 type TestModel struct {
-	ID          uint64     `gorm:"column:id"`
+	BaseModel
 	Name        string     `gorm:"column:name"`
 	Foobar      string     `gorm:"-"`
 	CustomField Uint8Slice `gorm:"column:custom_field"`
-	CreateTime  uint32     `gorm:"column:create_time"`
 }
 
 type Uint8Slice []uint8
@@ -58,30 +62,34 @@ func (u Uint8Slice) Value() (driver.Value, error) {
 
 func Test_ColumnsFromGormModleField(t *testing.T) {
 	columns := columnsFromModelType(reflect.TypeOf(TestModel{}))
-	assert.Equal(t, []string{"id", "name", "custom_field", "create_time"}, columns)
+	assert.Equal(t, []string{"id", "create_time", "name", "custom_field"}, columns)
 }
 
 func Test_ValueFromField(t *testing.T) {
 	model := TestModel{
-		ID:          10,
+		BaseModel: BaseModel{
+			ID:         10,
+			CreateTime: 1630248918,
+		},
 		Name:        "test",
 		CustomField: []uint8{1, 2},
-		CreateTime:  1630248918,
 	}
 	value := valuesFromModel(reflect.TypeOf(model), reflect.ValueOf(model))
-	assert.Equal(t, []driver.Value{uint64(10), "test", []byte("1,2"), uint32(1630248918)}, value)
+	assert.Equal(t, []driver.Value{uint64(10), uint32(1630248918), "test", []byte("1,2")}, value)
 }
 
 func Test_SingleRow(t *testing.T) {
 	model := TestModel{
-		ID:          12,
+		BaseModel: BaseModel{
+			ID:         12,
+			CreateTime: 1630248920,
+		},
 		Name:        "test_abc",
 		CustomField: []uint8{1, 2},
-		CreateTime:  1630248920,
 	}
 
-	targetRows := sqlmock.NewRows([]string{"id", "name", "custom_field", "create_time"}).
-		AddRow(uint64(12), "test_abc", []byte("1,2"), uint32(1630248920))
+	targetRows := sqlmock.NewRows([]string{"id", "create_time", "name", "custom_field"}).
+		AddRow(uint64(12), uint32(1630248920), "test_abc", []byte("1,2"))
 
 	rows := ModelToRows(model)
 	assert.Equal(t, targetRows, rows)
@@ -93,21 +101,25 @@ func Test_SingleRow(t *testing.T) {
 func Test_MultiStructValueRows(t *testing.T) {
 	model := []TestModel{
 		{
-			ID:          12,
+			BaseModel: BaseModel{
+				ID:         12,
+				CreateTime: 1630248920,
+			},
 			Name:        "test_abc",
 			CustomField: []uint8{1, 2},
-			CreateTime:  1630248920,
 		},
 		{
-			ID:         13,
-			Name:       "test_efg",
-			CreateTime: 1630248922,
+			BaseModel: BaseModel{
+				ID:         13,
+				CreateTime: 1630248922,
+			},
+			Name: "test_efg",
 		},
 	}
 
-	targetRows := sqlmock.NewRows([]string{"id", "name", "custom_field", "create_time"}).
-		AddRow(uint64(12), "test_abc", []byte("1,2"), uint32(1630248920)).
-		AddRow(uint64(13), "test_efg", []byte(""), uint32(1630248922))
+	targetRows := sqlmock.NewRows([]string{"id", "create_time", "name", "custom_field"}).
+		AddRow(uint64(12), uint32(1630248920), "test_abc", []byte("1,2")).
+		AddRow(uint64(13), uint32(1630248922), "test_efg", []byte(""))
 
 	rows := ModelToRows(model)
 	assert.Equal(t, targetRows, rows)
@@ -116,21 +128,25 @@ func Test_MultiStructValueRows(t *testing.T) {
 func Test_MultiStructPtrRows(t *testing.T) {
 	model := []*TestModel{
 		{
-			ID:          12,
+			BaseModel: BaseModel{
+				ID:         12,
+				CreateTime: 1630248920,
+			},
 			Name:        "test_abc",
-			CreateTime:  1630248920,
 			CustomField: []uint8{},
 		},
 		{
-			ID:         13,
-			Name:       "test_efg",
-			CreateTime: 1630248922,
+			BaseModel: BaseModel{
+				ID:         13,
+				CreateTime: 1630248922,
+			},
+			Name: "test_efg",
 		},
 	}
 
-	targetRows := sqlmock.NewRows([]string{"id", "name", "custom_field", "create_time"}).
-		AddRow(uint64(12), "test_abc", []byte(""), uint32(1630248920)).
-		AddRow(uint64(13), "test_efg", []byte(""), uint32(1630248922))
+	targetRows := sqlmock.NewRows([]string{"id", "create_time", "name", "custom_field"}).
+		AddRow(uint64(12), uint32(1630248920), "test_abc", []byte("")).
+		AddRow(uint64(13), uint32(1630248922), "test_efg", []byte(""))
 
 	rows := ModelToRows(model)
 	assert.Equal(t, targetRows, rows)

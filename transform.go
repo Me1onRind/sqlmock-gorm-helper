@@ -22,17 +22,11 @@ func ModelToRows(dst interface{}) *sqlmock.Rows {
 
 	if dstType.Kind() == reflect.Slice {
 		dstType = dstType.Elem()
-		if dstType.Kind() == reflect.Ptr {
-			dstType = dstType.Elem()
-		}
 		for i := 0; i < dstValue.Len(); i++ {
 			dstValueItem := dstValue.Index(i)
 			allValues = append(allValues, valuesFromModel(dstType, dstValueItem))
 		}
 	} else {
-		if dstType.Kind() == reflect.Ptr {
-			dstType = dstType.Elem()
-		}
 		allValues = append(allValues, valuesFromModel(dstType, dstValue))
 	}
 
@@ -47,11 +41,16 @@ func ModelToRows(dst interface{}) *sqlmock.Rows {
 func valuesFromModel(dstType reflect.Type, dstValue reflect.Value) []driver.Value {
 	if dstValue.Kind() == reflect.Ptr {
 		dstValue = dstValue.Elem()
+		dstType = dstType.Elem()
 	}
 	var values []driver.Value
 	for j := 0; j < dstValue.NumField(); j++ {
 		fieldValue := dstValue.Field(j)
-		columnValue := valueFromField(dstType.Field(j), fieldValue)
+		dstTypeField := dstType.Field(j)
+		if fieldValue.Kind() == reflect.Struct && dstTypeField.Anonymous {
+			values = append(values, valuesFromModel(fieldValue.Type(), fieldValue)...)
+		}
+		columnValue := valueFromField(dstTypeField, fieldValue)
 		if columnValue != nil {
 			switch cv := columnValue.(type) {
 			case driver.Valuer:
@@ -70,12 +69,19 @@ func valuesFromModel(dstType reflect.Type, dstValue reflect.Value) []driver.Valu
 }
 
 func columnsFromModelType(dstType reflect.Type) []string {
+	if dstType.Kind() == reflect.Ptr {
+		dstType = dstType.Elem()
+	}
 	var columns []string
 	for i := 0; i < dstType.NumField(); i++ {
 		field := dstType.Field(i)
-		column := getColumnFromField(field)
-		if len(column) > 0 {
-			columns = append(columns, column)
+		if field.Type.Kind() == reflect.Struct && field.Anonymous {
+			columns = append(columns, columnsFromModelType(field.Type)...)
+		} else {
+			column := getColumnFromField(field)
+			if len(column) > 0 {
+				columns = append(columns, column)
+			}
 		}
 	}
 	return columns
