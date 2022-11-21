@@ -15,7 +15,7 @@ import (
 )
 
 type BaseModel struct {
-	ID         uint64 `gorm:"column:id"`
+	ID         uint64 `gorm:"column:id;primary"`
 	CreateTime uint32 `gorm:"column:create_time"`
 }
 

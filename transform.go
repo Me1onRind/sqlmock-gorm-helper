@@ -96,7 +96,7 @@ func valueFromField(field reflect.StructField, value reflect.Value) driver.Value
 
 func GetColumnFromGromModelField(field reflect.StructField) string {
 	tag := field.Tag.Get("gorm")
-	items := strings.Split(tag, ",")
+	items := strings.Split(tag, ";")
 	for _, v := range items {
 		if strings.HasPrefix(v, "column:") {
 			column := strings.TrimPrefix(v, "column:")
