@@ -154,7 +154,7 @@ func Test_MultiStructPtrRows(t *testing.T) {
 
 func Test_InsertSql(t *testing.T) {
 	sql := InsertSql(TestModel{}, "test_table")
-	wantSql := "INSERT INTO `test_table` (`create_time`,`name`,`custom_field`) VALUES (\\?,\\?,\\?)"
+	wantSql := "INSERT INTO `test_table` \\(`create_time`,`name`,`custom_field`\\) VALUES \\(\\?,\\?,\\?\\)"
 	assert.Equal(t, sql, wantSql)
 
 	sql = InsertSql(&TestModel{}, "test_table")

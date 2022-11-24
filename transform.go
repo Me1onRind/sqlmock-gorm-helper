@@ -45,7 +45,7 @@ func InsertSql(model interface{}, tableName string) string {
 		newColumns = append(newColumns, "`"+v+"`")
 		values = append(values, "\\?")
 	}
-	return fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
+	return fmt.Sprintf("INSERT INTO `%s` \\(%s\\) VALUES \\(%s\\)", tableName,
 		strings.Join(newColumns, ","), strings.Join(values, ","))
 	//sql := "INSERT INTOstrings.Join(",", newColumns[])
 }
