@@ -1,4 +1,4 @@
-module github.com/Me1onRind/sqlmock-rows-helper
+module github.com/Me1onRind/sqlmock-gorm-helper
 
 go 1.16
 

@@ -2,16 +2,11 @@ package sqlmock_rows_helper
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/DATA-DOG/go-sqlmock"
-)
-
-type GetColumnFromField func(field reflect.StructField) string
-
-var (
-	getColumnFromField GetColumnFromField = GetColumnFromGromModelField
 )
 
 func ModelToRows(dst interface{}) *sqlmock.Rows {
@@ -36,6 +31,23 @@ func ModelToRows(dst interface{}) *sqlmock.Rows {
 	}
 
 	return rows
+}
+
+func InsertSql(model interface{}, tableName string) string {
+	dstType := reflect.TypeOf(model)
+	columns := columnsFromModelType(dstType)
+	newColumns := make([]string, 0, len(columns))
+	values := make([]string, 0, len(columns))
+	for _, v := range columns {
+		if strings.ToLower(v) == "id" {
+			continue
+		}
+		newColumns = append(newColumns, "`"+v+"`")
+		values = append(values, "\\?")
+	}
+	return fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
+		strings.Join(newColumns, ","), strings.Join(values, ","))
+	//sql := "INSERT INTOstrings.Join(",", newColumns[])
 }
 
 func valuesFromModel(dstType reflect.Type, dstValue reflect.Value) []driver.Value {
@@ -94,7 +106,7 @@ func valueFromField(field reflect.StructField, value reflect.Value) driver.Value
 	return nil
 }
 
-func GetColumnFromGromModelField(field reflect.StructField) string {
+func getColumnFromField(field reflect.StructField) string {
 	tag := field.Tag.Get("gorm")
 	items := strings.Split(tag, ";")
 	for _, v := range items {
